@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Employee Form with Firebase</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background-color: #f4f4f4;
+      }
+
+      form {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        max-width: 500px;
+        margin: 0 auto;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+
+      button {
+        background-color: #28a745;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-right: 5px;
+      }
+
+      button:hover {
+        background-color: #218838;
+      }
+
+      /* Style for employee cards */
+      .card {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 10px 0;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .card h3 {
+        margin-top: 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <form>
+      <h2>Employee Form</h2>
+
+      <!-- Text Input -->
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input
+          type="text"
+          id="name"
+          name="name"
+          placeholder="Enter your full name"
+          required
+        />
+      </div>
+
+      <!-- Email Input -->
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input
+          type="email"
+          id="email"
+          name="email"
+          placeholder="Enter your email"
+          required
+        />
+      </div>
+
+      <!-- Password Input -->
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          type="password"
+          id="password"
+          name="password"
+          placeholder="Enter a password"
+          required
+        />
+      </div>
+
+      <!-- Phone Input -->
+      <div class="form-group">
+        <label for="phone">Phone Number</label>
+        <input
+          type="tel"
+          id="phone"
+          name="phone"
+          placeholder="Enter your phone number"
+          required
+        />
+      </div>
+
+      <!-- Gender Select -->
+      <div class="form-group">
+        <label for="gender">Gender</label>
+        <select id="gender" name="gender" required>
+          <option value="">Select your gender</option>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+
+      <!-- Action Buttons -->
+      <button id="addbtn">Add</button>
+      <button id="retbtn">Retrieve</button>
+      <button id="updatebtn">Update</button>
+      <button id="delbtn">Delete</button>
+    </form>
+
+    <!-- Container for employee cards -->
+    <div id="employeeCardsContainer" style="margin-top: 30px"></div>
+
+    <script type="module">
+      // Import the Firebase SDKs
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+      import {
+        getDatabase,
+        ref,
+        child,
+        get,
+        set,
+        update,
+        remove,
+      } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js";
+
+      // Your Firebase configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyCPQu0cYsqCMcA4m2_MXTmCHvMOTwuP4hY",
+        authDomain: "community-5bb64.firebaseapp.com",
+        databaseURL: "https://community-5bb64-default-rtdb.firebaseio.com",
+        projectId: "community-5bb64",
+        storageBucket: "community-5bb64.appspot.com",
+        messagingSenderId: "91138950700",
+        appId: "1:91138950700:web:7df188c0cdc1d61fb4b389",
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase();
+
+      // Select form inputs and buttons
+      const fullNameInput = document.getElementById("name");
+      const emailInput = document.getElementById("email");
+      const passwordInput = document.getElementById("password");
+      const phoneInput = document.getElementById("phone");
+      const genderSelect = document.getElementById("gender");
+
+      const addButton = document.getElementById("addbtn");
+      const retrieveButton = document.getElementById("retbtn");
+      const updateButton = document.getElementById("updatebtn");
+      const deleteButton = document.getElementById("delbtn");
+
+      // Function to add employee data to Firebase
+      function addData() {
+        set(ref(db, "EmployeeSet/" + phoneInput.value), {
+          nameofemployee: fullNameInput.value,
+          emailofemployee: emailInput.value,
+          passwordofemployee: passwordInput.value,
+          genderofemployee: genderSelect.value,
+          phoneofemployee: phoneInput.value,
+        })
+          .then(() => {
+            alert("Data added successfully");
+            fetchAndDisplayEmployees(); // Fetch and display employees after adding
+          })
+          .catch((error) => {
+            alert("Unsuccessful");
+            console.log(error);
+          });
+      }
+
+      // Function to retrieve and display employee data in cards
+      function fetchAndDisplayEmployees() {
+        const dbRef = ref(db);
+
+        get(child(dbRef, "EmployeeSet"))
+          .then((snapshot) => {
+            console.log("Snapshot data: ", snapshot.val()); // Log the snapshot
+
+            if (snapshot.exists()) {
+              const employees = snapshot.val();
+              let employeeCards = "";
+
+              Object.values(employees).forEach((employee) => {
+                employeeCards += `
+                              <div class="card">
+                                <h3>${employee.nameofemployee}</h3>
+                                <p><strong>Email:</strong> ${employee.emailofemployee}</p>
+                                <p><strong>Phone:</strong> ${employee.phoneofemployee}</p>
+                                <p><strong>Gender:</strong> ${employee.genderofemployee}</p>
+                              </div>
+                            `;
+              });
+
+              document.getElementById("employeeCardsContainer").innerHTML =
+                employeeCards;
+            } else {
+              document.getElementById("employeeCardsContainer").innerHTML =
+                "No employee data available";
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching data: ", error);
+          });
+      }
+
+      // Function to update employee data
+      function updateData() {
+        update(ref(db, "EmployeeSet/" + phoneInput.value), {
+          nameofemployee: fullNameInput.value,
+          emailofemployee: emailInput.value,
+          passwordofemployee: passwordInput.value,
+          genderofemployee: genderSelect.value,
+        })
+          .then(() => {
+            alert("Data updated successfully");
+            fetchAndDisplayEmployees(); // Fetch and display updated employees
+          })
+          .catch((error) => {
+            alert("Unsuccessful");
+            console.log(error);
+          });
+      }
+
+      // Function to delete employee data
+      function delData() {
+        remove(ref(db, "EmployeeSet/" + phoneInput.value))
+          .then(() => {
+            alert("Data deleted successfully");
+            fetchAndDisplayEmployees(); // Fetch and display employees after deletion
+          })
+          .catch((error) => {
+            alert("Unsuccessful");
+            console.log(error);
+          });
+      }
+
+      // Attach event listeners
+      addButton.addEventListener("click", function (event) {
+        event.preventDefault();
+        addData();
+      });
+
+      retrieveButton.addEventListener("click", function (event) {
+        event.preventDefault();
+        fetchAndDisplayEmployees(); // Fetch employees on button click
+      });
+
+      updateButton.addEventListener("click", function (event) {
+        event.preventDefault();
+        updateData();
+      });
+
+      deleteButton.addEventListener("click", function (event) {
+        event.preventDefault();
+        delData();
+      });
+
+      // Fetch and display employees when the page loads
+      window.onload = fetchAndDisplayEmployees;
+    </script>
+  </body>
+</html>
